@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>DirectTV HandsFree</title>
+<script src="http://js.leapmotion.com/leap-0.6.4.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+
+<script>
+// Store frame for motion functions
+var previousFrame = null;
+var lasttype = "";
+
+// Setup Leap loop with frame callback function
+var controllerOptions = {enableGestures: true};
+
+
+Leap.loop(controllerOptions, function(frame) {
+  checkIfCircled(frame);
+});
+
+
+function clearType ()
+{
+  lasttype = "";
+}
+
+function checkIfCircled( frame ) {
+  if (frame.gestures.length > 0) {		
+    var gesture = frame.gestures[0];
+	var mygetrequest=new XMLHttpRequest();
+    if (gesture.type == "circle" && lasttype == "") {
+          mygetrequest.open("GET", "http://10.121.1.67:8080/remote/processKey?key=pause", true);
+          mygetrequest.send(null);
+          lasttype="circle";
+		  console.log("Circle registered");
+    } else if (gesture.type == "swipe" && lasttype == ""){
+		if(gesture.startPosition < gesture.position){ //swipe right
+		  mygetrequest.open("GET", "http://10.121.1.67:8080/remote/processKey?key=ffwd", true);
+          mygetrequest.send(null);
+		  console.log("Swipe right registered");
+		} else if(gesture.startPosition > gesture.position){	//swipe left
+		  mygetrequest.open("GET", "http://10.121.1.67:8080/remote/processKey?key=rew", true);
+          mygetrequest.send(null);
+		  console.log("Swipe left registered");
+		}
+          lasttype="swipe";
+	} else if (gesture.type == "screenTap" && lasttype == ""){
+		  mygetrequest.open("GET", "http://10.121.1.67:8080/remote/processKey?key=pause", true); //	http://10.121.1.67:8080/itv/startURL?url=http://www.google.com
+          mygetrequest.send(null);
+          lasttype="screenTap";
+		  console.log("Screen tap registered");
+	}else if (lasttype != "") {
+     setTimeout(clearType, 2000);
+    }
+  }
+}
+
+</script>
+
+</head>
+<body>
+<h1>DirectTV Hands-Free control</h1>
+<div id="main">
+</div>
+</body>
+</html>
+

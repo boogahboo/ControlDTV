@@ -1,0 +1,100 @@
+
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>DirectTV HandsFree</title>
+<script src="http://js.leapmotion.com/leap-0.6.4.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+
+<script src="C:\Users\owner\Desktop\stuff i downloaed\leap\samples\Dtv\odometer.js"></script>
+
+<script>
+// Store frame for motion functions
+var previousFrame = null;
+var lasttype = "";
+var prevID;
+
+// Setup Leap loop with frame callback function
+var controllerOptions = {enableGestures: true};
+
+var Object = function () {
+	this.channel = [];
+	this.uid = [32,0,2,5,70,22,59,71,3,8];
+	this.pendingDigit = 0;
+	this.submit = function () {
+		// send the GET request to the directv api
+		var realChannel = this.channel.join('');
+		
+		var mygetrequest=new XMLHttpRequest();
+		console.log("submit");
+		console.log(this.channel[0]);
+			mygetrequest.open("GET", "http://10.121.1.67:8080/dvr/play?uniqueId=" + this.uid[this.channel[0]], true);
+			mygetrequest.send(null);
+		this.channel = [];
+	};
+	
+	this.flush = function () {
+		
+			this.channel.push(this.pendingDigit);
+			
+	};
+	
+	function clearType()
+	{
+	lasttype = "";
+	}
+	
+	this.loop = function (frame) {
+	
+		if (frame.gestures.length > 0) {
+			var gesture = frame.gestures[0];
+			console.log("Gesture registered");
+			//setTimeout(clearType,1000);
+		if (gesture.type == "circle" && gesture.id != prevID ) {
+			++this.pendingDigit;
+			prevID == gesture.id;
+			console.log(gesture.id);
+			if(this.pendingDigit == 10){
+				this.pendingDigit = 0;
+			}
+		} else if (gesture.type == "screenTap" ){
+			this.flush();
+			console.log("tap");
+			if (this.channel.length >= 1) {
+				this.submit();
+			}
+				//submit
+		}
+		}
+	};
+	
+	return this;
+};
+
+var object = new Object();
+
+
+Leap.loop(controllerOptions, function(frame) {
+	object.loop(frame);
+  var realChannel = object.channel.join('');
+  realChannel = realChannel + object.pendingDigit;
+  document.getElementById("odometer").innerHTML = realChannel;
+});
+
+
+
+
+</script>
+
+<div id="odometer" class="odometer" style="font-size: 20em;"></div>
+
+
+</head>
+<body>
+<h1>DirectTV Hands-Free control</h1>
+<div id="main">
+</div>
+</body>
+</html>
+
